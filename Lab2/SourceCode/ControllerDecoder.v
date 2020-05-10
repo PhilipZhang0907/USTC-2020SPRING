@@ -66,13 +66,14 @@ module ControllerDecoder(
 
     assign alu_src1 = (opcode == `AUIPC) ? 1'b1 : 1'b0;
     assign alu_src2 = ((opcode == `ALG_LOGIC_IMM) && (func3[1:0] == 2'b01)) ? (2'b01) : (((opcode == `ALG_LOGIC) || (opcode == `BRANCH)) ? 2'b00 : 2'b10);
+    assign op2_src = ((opcode == `ALG_LOGIC) ? 1'b0 : 1'b1);
 
     always@(*)
     begin
         case(opcode)
         `ALG_LOGIC:     reg_write_en <= 1'b1;
         `ALG_LOGIC_IMM: reg_write_en <= 1'b1;
-        `LUI:           reg_write_en <= 1'b1;
+        `Inst_LUI:      reg_write_en <= 1'b1;
         `AUIPC:         reg_write_en <= 1'b1;
         `JALR:          reg_write_en <= 1'b1;
         `JAL:           reg_write_en <= 1'b1;
@@ -81,23 +82,6 @@ module ControllerDecoder(
         `STORE:         reg_write_en <= 1'b0;
         //TODO: CSR
         `CSR:           reg_write_en <= 1'b1;
-        endcase
-    end
-
-    always@(*)
-    begin
-        case(opcode)
-        `ALG_LOGIC:     op2_src <= 1'b0;
-        `ALG_LOGIC_IMM: op2_src <= 1'b1;
-        `LUI:           op2_src <= 1'b1;
-        `AUIPC:         op2_src <= 1'b1;
-        `JALR:          op2_src <= 1'b1;
-        `JAL:           op2_src <= 1'b1;
-        `BRANCH:        op2_src <= 1'b1;
-        `LOAD:          op2_src <= 1'b1;
-        `STORE:         op2_src <= 1'b1;
-        //TODO: CSR
-        `CSR:           op2_src <= 1'b1;
         endcase
     end
 
@@ -214,12 +198,12 @@ module ControllerDecoder(
                 3'b010: cache_write_en <= 4'b1111;    //SW                                                 
             endcase
         end
-        `LUI:
+        `Inst_LUI:
         begin    //LUI
             load_type       <= `LW;
             //ALU_func<=`ADD;
             cache_write_en  <= 4'b0000;
-            ALU_func        <= `ALU_LUI;
+            ALU_func        <= `LUI;
             imm_type        <= `UTYPE;     
         end 
         `AUIPC:

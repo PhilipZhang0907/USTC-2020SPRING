@@ -55,7 +55,7 @@
     // `define SHIFT_IMM 7'b0010011
     `define ALG_LOGIC       7'b0110011
     `define ALG_LOGIC_IMM   7'b0010011
-    `define LUI             7'b0110111
+    `define Inst_LUI        7'b0110111
     `define AUIPC           7'b0010111 
     `define JALR            7'b1100111 
     `define JAL             7'b1101111 

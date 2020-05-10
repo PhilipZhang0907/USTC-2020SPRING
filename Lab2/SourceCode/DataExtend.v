@@ -38,42 +38,38 @@ module DataExtend(
             `LB:
             begin
                 case(addr)
-                    begin
-                        2'b00: dealt_data <= {24{data[7]}, data[7:0]};
-                        2'b01: dealt_data <= {24{data[15]}, data[15:8]};
-                        2'b10: dealt_data <= {24{data[23]}, data[23:16]};
-                        2'b11: dealt_data <= {24{data[31]}, data[31:24]};
-                    end
+                    2'b00: dealt_data <= {{24{data[7]}}, data[7:0]};
+                    2'b01: dealt_data <= {{24{data[15]}}, data[15:8]};
+                    2'b10: dealt_data <= {{24{data[23]}}, data[23:16]};
+                    2'b11: dealt_data <= {{24{data[31]}}, data[31:24]};
+                endcase
             end
             `LH:
             begin
                 case(addr)
-                    begin
-                        2'b00: dealt_data <= {16{data[15]}, data[15:0]};
-                        2'b01: dealt_data <= {16{data[15]}, data[15:0]};
-                        2'b10: dealt_data <= {16{data[31]}, data[31:16]};
-                        2'b11: dealt_data <= {16{data[31]}, data[31:16]};
-                    end
+                    2'b00: dealt_data <= {{16{data[15]}}, data[15:0]};
+                    2'b01: dealt_data <= {{16{data[15]}}, data[15:0]};
+                    2'b10: dealt_data <= {{16{data[31]}}, data[31:16]};
+                    2'b11: dealt_data <= {{16{data[31]}}, data[31:16]};
+                endcase
             end
             `LBU:
             begin
                 case(addr)
-                    begin
-                        2'b00: dealt_data <= {24{1'b0}, data[7:0]};
-                        2'b01: dealt_data <= {24{1'b0}, data[15:8]};
-                        2'b10: dealt_data <= {24{1'b0}, data[23:16]};
-                        2'b11: dealt_data <= {24{1'b0}, data[31:24]};
-                    end
+                    2'b00: dealt_data <= {{24{1'b0}}, data[7:0]};
+                    2'b01: dealt_data <= {{24{1'b0}}, data[15:8]};
+                    2'b10: dealt_data <= {{24{1'b0}}, data[23:16]};
+                    2'b11: dealt_data <= {{24{1'b0}}, data[31:24]};
+                endcase
             end
             `LHU:
             begin
                 case(addr)
-                    begin
-                        2'b00: dealt_data <= {16{1'b0}, data[15:0]};
-                        2'b01: dealt_data <= {16{1'b0}, data[15:0]};
-                        2'b10: dealt_data <= {16{1'b0}, data[31:16]};
-                        2'b11: dealt_data <= {16{1'b0}, data[31:16]};
-                    end
+                    2'b00: dealt_data <= {{16{1'b0}}, data[15:0]};
+                    2'b01: dealt_data <= {{16{1'b0}}, data[15:0]};
+                    2'b10: dealt_data <= {{16{1'b0}}, data[31:16]};
+                    2'b11: dealt_data <= {{16{1'b0}}, data[31:16]};
+                endcase
             end
             `LW: dealt_data <= data;
         endcase

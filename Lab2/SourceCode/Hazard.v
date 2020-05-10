@@ -107,7 +107,7 @@ module HarzardUnit(
             end
         else if((reg_write_en_WB) && (src_reg_en[0]!=0) && (reg_dstW==reg2_srcE) &&(reg_dstW!=5'b0))
             begin
-                if(alu_src2 == 2'b00))
+                if(alu_src2 == 2'b00)
                     begin
                         op2_sel<=2'b01; 
                         reg2_sel<=2'b01;
