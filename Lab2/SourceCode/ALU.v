@@ -28,11 +28,17 @@ module ALU(
     input wire [3:0] ALU_func,
     output reg [31:0] ALU_out
     );
+
+    wire signed [31:0] op1Signed = $signed(op1);
+    wire signed [31:0] op2Signed = $signed(op2);
+
     always@(*)
     begin
         case(ALU_func)
-            `SLL: ALU_out <= op1 << op2[4:0];
-            `SRL: ALU_out <= op1 >> op2[4:0];
+            `SLL: ALU_out <= (op1 << (op2[4:0]));
+            `SRL: ALU_out <= (op1 >> (op2[4:0]));
+            `SRA: ALU_out <= (op1Signed >>> (op2[4:0]));
+            /*
             `SRA:
                 begin
                     if(op1[31] == 1)
@@ -44,12 +50,15 @@ module ALU(
                             ALU_out <= op1 >> op2[4:0];
                         end
                 end
+            */
             `ADD: ALU_out <= op1 + op2;
             `SUB: ALU_out <= op1 - op2;
             `XOR: ALU_out <= op1 ^ op2;
-            `OR: ALU_out <= op1 | op2;
+            `OR:  ALU_out <= op1 | op2;
             `AND: ALU_out <= op1 & op2;
-            `SLT:
+            `SLT: ALU_out <= op1Signed < op2Signed ? 32'd1 : 32'd0;
+            `SLTU:ALU_out <= op1 < op2 ? 32'd1 : 32'd0;
+            /*
                 begin
                     if((op1[31]==1 && op2[31]==0) || (op1[31]==1 && op2[31]==1 && op1>op2) || (op1[31]==0 && op2[31]==0 && op1<op2))
                         begin
@@ -71,7 +80,9 @@ module ALU(
                             ALU_out <= 32'd0;
                         end
                 end
+            */
             `LUI: ALU_out <= op2;
+            default: ALU_out <= 32'hxxxxxxxx;
         endcase
     end
     // TODO: Complete this module

@@ -37,6 +37,7 @@ module ImmExtend(
             `UTYPE: imm <= {inst[31:12], 12'b0};
             `JTYPE: imm <= {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
             `RTYPE: imm <= {32'b0};
+            // `RTYPE: imm <= {27'b0, inst[19:15]};
             // TODO: complete left part
             // Parameters.v defines all immediate type
         endcase

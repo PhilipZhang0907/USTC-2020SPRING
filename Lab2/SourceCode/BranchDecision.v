@@ -28,6 +28,10 @@ module BranchDecision(
     input wire [2:0] br_type,
     output reg br
     );
+
+    wire signed [31:0] reg1Signed = $signed(reg1);
+    wire signed [31:0] reg2Signed = $signed(reg2);
+
     always@(*)
     begin
         case(br_type)
@@ -35,39 +39,40 @@ module BranchDecision(
         `BEQ:
         begin
             if(reg1 == reg2)
-                br <= 1;
-            else br <= 0;
+                br <= 1'b1;
+            else br <= 1'b0;
         end
         `BNE:
         begin
-            if(reg1 == reg2)
-                br <= 0;
-            else br <= 1;
+            if(reg1 != reg2)
+                br <= 1'b1;
+            else br <= 1'b0;
         end
         `BLT:
         begin
-            if((reg1[31]==1 && reg2[31]==1 && reg1 > reg2) || (reg1[31]==0 && reg2[31]==0 && reg1 < reg2) || (reg1[31]==1 && reg2[31]==0))
-                br <= 1;
-            else br <= 0;
+            if(reg1Signed < reg2Signed)
+                br <= 1'b1;
+            else br <= 1'b0;
         end
         `BLTU:
         begin
             if(reg1 < reg2)
-                br <= 1;
-            else br <= 0;
+                br <= 1'b1;
+            else br <= 1'b0;
         end
         `BGE:
         begin
-            if((reg1[31]==1 && reg2[31]==1 && reg1 <= reg2) || (reg1[31]==0 && reg2[31]==0 && reg1 >= reg2) || (reg1[31]==0 && reg2[31]==1))
-                br <= 1;
-            else br <= 0;
+            if(reg1Signed >= reg2Signed)
+                br <= 1'b1;
+            else br <= 1'b0;
         end
         `BGEU:
         begin
             if(reg1 >= reg2)
-                br <= 1;
-            else br <= 0;
+                br <= 1'b1;
+            else br <= 1'b0;
         end
+        endcase
     end
     // TODO: Complete this module
 
