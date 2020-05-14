@@ -60,7 +60,16 @@ module RV32ICore(
     wire [31:0] result, result_MEM;
     wire [1:0] op1_sel, op2_sel, reg2_sel;
 
+    // CSR data path
+    wire [11:0] csr_addr_EX;
+    wire [2:0] csr_func3_out;
+    wire [4:0] csr_zimm_out;
+    wire csr_write_en_in,csr_write_en_out;
 
+    assign csr_write_en_in = (inst_ID[6:0] == `CSR ? (inst_ID[19:15] == 5'b0 ? 1'b0 :1'b1) : 1'b0);
+    wire   is_csr_in,is_csr_out;
+    assign is_csr_in = inst_ID[6:0] == `CSR ? 1'b1 : 1'b0;
+    wire   [31:0]csr_read_data;
 
 
     // Adder to compute PC + 4
@@ -86,7 +95,7 @@ module RV32ICore(
 
 
     // MUX for result (ALU or PC_EX)
-    assign result = load_npc_EX ? PC_EX : ALU_out;
+    assign result = load_npc_EX ? PC_EX : (is_csr_out ? csr_read_data : ALU_out);
 
 
 
@@ -270,6 +279,21 @@ module RV32ICore(
         .alu_src2_EX(alu_src2_EX)
     );
 
+    CsrAddrEx CsrAddrEx1(
+        .clk(CPU_CLK),
+        .bubbleE(bubbleE),
+        .flushE(flushE),
+        .csr_addr_in(inst_ID[31:20]),
+        .csr_addr_out(csr_addr_EX),
+        .func3_in(inst_ID[14:12]),
+        .func3_out(csr_func3_out),
+        .zimm_in(inst_ID[19:15]),
+        .zimm_out(csr_zimm_out),
+        .csr_write_en_in(csr_write_en_in),
+        .csr_write_en_out(csr_write_en_out),
+        .is_csr_in(is_csr_in),
+        .is_csr_out(is_csr_out)
+    );
 
     // ---------------------------------------------
     // EX stage
