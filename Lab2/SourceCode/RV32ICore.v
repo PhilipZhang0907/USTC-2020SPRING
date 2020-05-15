@@ -279,7 +279,7 @@ module RV32ICore(
         .alu_src2_EX(alu_src2_EX)
     );
 
-    CsrAddrEx CsrAddrEx1(
+    CSRAddrEx CSRAddrEx1(
         .clk(CPU_CLK),
         .bubbleE(bubbleE),
         .flushE(flushE),
@@ -298,6 +298,18 @@ module RV32ICore(
     // ---------------------------------------------
     // EX stage
     // ---------------------------------------------
+
+    ControlAndStatusRegister csr(
+        .clk(CPU_CLK),
+        .rst(CPU_RST),
+        .reg1(reg1_EX),
+        .zimm(csr_zimm_out),
+        .func3(csr_func3_out),
+        .read_reg_addr(csr_addr_EX),
+        .csr_write_en(csr_write_en_out),
+        .read_reg_data(csr_read_data),
+        .is_csr(is_csr_out)
+    );
 
     ALU ALU1(
         .op1(ALU_op1),
