@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 // author @ Philip-Chang
 
-module CsrAddrEx(
+module CSRAddrEx(
     input wire clk, bubbleE, flushE,
     input wire [2:0] func3_in,
     output reg [2:0] func3_out,
