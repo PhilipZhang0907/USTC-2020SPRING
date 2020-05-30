@@ -58,6 +58,8 @@ module HarzardUnit(
     input wire reg_write_en_WB,
     input wire alu_src1,
     input wire [1:0] alu_src2,
+    //lab3 Cache miss
+    input wire miss,
     output reg flushF, bubbleF, flushD, bubbleD, flushE, bubbleE, flushM, bubbleM, flushW, bubbleW,
     output reg [1:0] op1_sel, op2_sel, reg2_sel
     );
@@ -68,6 +70,8 @@ module HarzardUnit(
     begin
         if(rst)
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b0101010101;
+        else if(miss) //lab3 Cache
+            {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b1010101010;
         else if(br | jalr)
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b0001010000;
         else if(wb_select==1'b1 & reg_dstE != 5'b0 & ((reg_dstE==reg1_srcD)||(reg_dstE==reg2_srcD)))

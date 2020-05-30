@@ -41,14 +41,37 @@ module WB_Data_WB(
     input  [31:0] debug_addr,
     input  [31:0] in_data, debug_in_data,
     output wire [31:0] debug_out_data,
-    output wire [31:0] data_WB
+    output wire [31:0] data_WB,
+    //lab3 Cache
+    input wire rst,
+    output wire miss,
+    output wire debug_cache_hit,
+    output wire [31:0] total_count
     );
 
     wire [31:0] data_raw;
     wire [31:0] data_WB_raw;
 
+    cache #(
+    .LINE_ADDR_LEN  ( 5             ),
+    .SET_ADDR_LEN   ( 2             ),
+    .TAG_ADDR_LEN   ( 8             ),
+    .WAY_CNT        ( 1             )
+    )mycache
+    (
+    .clk            ( clk           ), 
+    .rst            ( rst           ), 
+    .miss           ( miss          ), 
+    .addr           ( addr          ), 
+    .rd_req         ( (wb_select == 1'b1) ? 1'b1 : 1'b0), 
+    .rd_data        ( data_raw      ), 
+    .wr_req         ( (write_en == 4'b0000) ? 0 : 1), 
+    .wr_data        ( in_data       ), 
+    .debug_cache_hit(debug_cache_hit),
+    .total_count(total_count)
+    );
 
-
+/*
     DataCache DataCache1(
         .clk(clk),
         .write_en(write_en << addr[1:0]),
@@ -60,6 +83,7 @@ module WB_Data_WB(
         .out_data(data_raw),
         .debug_out_data(debug_out_data)
     );
+*/
 
 
 

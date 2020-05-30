@@ -25,7 +25,11 @@ module RV32ICore(
     input wire [31:0] CPU_Debug_InstCache_A2,
     input wire [31:0] CPU_Debug_InstCache_WD2,
     input wire [ 3:0] CPU_Debug_InstCache_WE2,
-    output wire [31:0] CPU_Debug_InstCache_RD2
+    output wire [31:0] CPU_Debug_InstCache_RD2,
+    // Lab3 Cache
+    output wire debug_miss,
+    output wire debug_cache_hit,
+    output wire [31:0]total_count
     );
 	//wire values definitions
     wire bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW;
@@ -386,7 +390,11 @@ module RV32ICore(
         .in_data(reg2_MEM),
         .debug_in_data(CPU_Debug_DataCache_WD2),
         .debug_out_data(CPU_Debug_DataCache_RD2),
-        .data_WB(data_WB)
+        .data_WB(data_WB),
+        .miss(miss),
+        .rst(CPU_RST),
+        .debug_cache_hit(debug_cache_hit),
+        .total_count(total_count)
     );
 
 
@@ -446,7 +454,8 @@ module RV32ICore(
         .bubbleW(bubbleW),
         .op1_sel(op1_sel),
         .op2_sel(op2_sel),
-        .reg2_sel(reg2_sel)
+        .reg2_sel(reg2_sel),
+        .miss(miss)
     );  
     	         
 endmodule
