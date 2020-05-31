@@ -375,7 +375,8 @@ module RV32ICore(
     // ---------------------------------------------
     // MEM stage
     // ---------------------------------------------
-
+    wire miss;
+    assign debug_miss = miss;
 
     WB_Data_WB WB_Data_WB1(
         .clk(CPU_CLK),
