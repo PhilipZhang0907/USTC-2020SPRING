@@ -135,7 +135,7 @@ always@(*) begin
 end
 `endif
 
-always @ (posedge clk or posedge rst) begin     // ?? cache ???
+always @ (posedge clk or posedge rst) begin
     if(rst) begin
         cache_stat <= IDLE;
         for(integer i = 0; i < SET_SIZE; i++)
