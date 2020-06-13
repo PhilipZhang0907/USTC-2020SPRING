@@ -111,7 +111,7 @@ module RV32ICore(
     wire bht_if, bht_id, bht_ex;
     wire [31:0] final_predict_if, final_predict_id, final_predict_ex;
 
-    assign final_predictif = bht_if ? (btb_if ? predict_if : PC_IF + 8) : ( PC_IF + 8 );
+    assign final_predict_if = bht_if ? (btb_if ? predict_if : PC_IF + 8) : ( PC_IF + 8 );
     assign if_predict_true = (final_predict_ex == br_target) ? 1'b1 : 1'b0;
     assign btb_operation = br ? (btb_ex ? (if_predict_true ? `BTB_NONE : `BTB_UPDATE) : `BTB_ADD) : (btb_ex ? ( bht_ex ?  `BTB_NONE : `BTB_REMOVE) : `BTB_NONE);
 
@@ -206,7 +206,7 @@ module RV32ICore(
         .rst(CPU_RST),
         .br_ex(br),
         .raddr(predict_if[bht_addr_len-1:0]),
-        .waddr(predict_if[bht_addr_len-1:0]),
+        .waddr(predict_ex[bht_addr_len-1:0]),
         .predict_taken(bht_if)
     );
 
