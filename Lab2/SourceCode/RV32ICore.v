@@ -411,14 +411,14 @@ module RV32ICore(
     );
 
     //TODO: CSR debug
-    CsrAddrEx CsrAddrEx1(
+    CSRAddrEx CsrAddrEx1(
         .clk(CPU_CLK),
         .bubbleE(bubbleE),
         .flushE(flushE),
         .csr_addr_in(inst_ID[31:20]),
         .csr_addr_out(csr_addr_EX),
-        .funct3_in(inst_ID[14:12]),
-        .funct3_out(csr_funct3_out),
+        .func3_in(inst_ID[14:12]),
+        .func3_out(csr_funct3_out),
         .zimm_in(inst_ID[19:15]),
         .zimm_out(csr_zimm_out),
         .csr_write_en_in(csr_write_en_in),
@@ -437,7 +437,7 @@ module RV32ICore(
         .rst(CPU_RST),
         .reg1(reg1_EX),
         .zimm(csr_zimm_out),
-        .funct3(csr_funct3_out),
+        .func3(csr_funct3_out),
         .read_reg_addr(csr_addr_EX),
         .csr_write_en(csr_write_en_out),
         .read_reg_data(csr_read_data),
