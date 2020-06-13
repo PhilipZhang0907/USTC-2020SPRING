@@ -53,10 +53,10 @@ module WB_Data_WB(
     wire [31:0] data_WB_raw;
 
     cache #(
-    .LINE_ADDR_LEN  ( 5             ),
+    .LINE_ADDR_LEN  ( 3             ),
     .SET_ADDR_LEN   ( 2             ),
-    .TAG_ADDR_LEN   ( 8             ),
-    .WAY_CNT        ( 1             )
+    .TAG_ADDR_LEN   ( 12            ),
+    .WAY_CNT        ( 3             )
     )mycache
     (
     .clk            ( clk           ), 

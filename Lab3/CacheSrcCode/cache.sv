@@ -129,7 +129,7 @@ always@(*) begin
         end
         for (integer i = 0; i < WAY_CNT; i++)
             begin
-                use_count[set_addr][i] = use_count[set_addr][i] - use_count[set_addr][way_select]; //减少计数溢出 TODO: test this
+                use_count[set_addr][i] = use_count[set_addr][i] - use_count[set_addr][way_select]; //减少计数溢出
             end
     end
 end

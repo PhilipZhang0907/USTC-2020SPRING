@@ -101,7 +101,114 @@ module RV32ICore(
     // MUX for result (ALU or PC_EX)
     assign result = load_npc_EX ? PC_EX : (is_csr_out ? csr_read_data : ALU_out);
 
+    // For Lab4 BTB
+    wire btb_if, btb_id, btb_ex;
+    wire [31:0] predict_if, predict_id, predict_ex;
+    wire if_predict_true;
+    wire [1:0] btb_operation;
 
+    // For Lab4 BHT
+    wire bht_if, bht_id, bht_ex;
+    wire [31:0] final_predict_if, final_predict_id, final_predict_ex;
+
+    assign final_predictif = bht_if ? (btb_if ? predict_if : PC_IF + 8) : ( PC_IF + 8 );
+    assign if_predict_true = (final_predict_ex == br_target) ? 1'b1 : 1'b0;
+    assign btb_operation = br ? (btb_ex ? (if_predict_true ? `BTB_NONE : `BTB_UPDATE) : `BTB_ADD) : (btb_ex ? ( bht_ex ?  `BTB_NONE : `BTB_REMOVE) : `BTB_NONE);
+
+    // For lab4 test
+    initial
+    begin
+        br_count = 0;
+        predict_wrong = 0;
+    end
+    always@(posedge CPU_CLK or posedge CPU_RST)
+    begin
+        if(CPU_RST)
+        begin
+            br_count = 0;
+            predict_wrong = 0;
+        end
+        else
+        begin
+            if(inst_ID[6:0] == `BRANCH)
+            begin
+                br_count = br_count + 1;
+            end
+            if(!if_predict_true && br || ~br && (btb_ex && bht_ex))
+            begin
+                predict_wrong = predict_wrong + 1;
+            end
+        end
+    end
+
+    // lab4 module
+    BTB_ID_SEG new_BTB_ID_SEG(
+        .clk(CPU_CLK),
+        .bubbleD(bubbleD),
+        .flushD(flushD),
+        .btb_if(btb_if),
+        .predict_if(predict_if),
+        .btb_id(btb_id),
+        .predict_id(predict_id)
+    );
+
+    BTB_EX_SEG new_BTB_ID_SEG(
+        .clk(CPU_CLK),
+        .bubbleE(bubbleE),
+        .flushE(flushE),
+        .btb_id(btb_id),
+        .predict_id(predict_id),
+        .btb_ex(btb_ex),
+        .predict_ex(predict_ex)
+    );
+
+    BHT_ID_SEG new_BHT_ID_SEG(
+        .clk(CPU_CLK),
+        .bubbleD(bubbleD),
+        .flushD(flushD),
+        .bht_if(bht_if),
+        .final_predict_if(final_predict_if),
+        .bht_id(bht_id),
+        .final_predict_id(final_predict_id)
+    );
+
+    BHT_EX_SEG new_BHT_EX_SEG(
+        .clk(CPU_CLK),
+        .bubbleE(bubbleE),
+        .flushE(flushE),
+        .bht_id(bht_id),
+        .final_predict_id(final_predict_id),
+        .bht_ex(bht_ex),
+        .final_predict_ex(final_predict_ex)
+    );
+
+    Branch_Target_Buffer#(
+        .BUFFER_ADDR_LEN(7)
+    )
+    my_btb
+    (
+        .clk(CPU_CLK), 
+        .rst(CPU_RST),
+        .hit(btb_if),         
+        .raddr(PC_IF+4),
+        .rd_data(predict_if),    
+        .opr(btb_operation),
+        .waddr(PC_EX),
+        .wr_data(br_target)
+    );
+
+    Branch_History_Table#(
+        .BHT_ADDR_LEN(7)
+    )
+    my_bht
+    (
+        .clk(CPU_CLK), 
+        .rst(CPU_RST),
+        .br_ex(br),
+        .raddr(predict_if[bht_addr_len-1:0]),
+        .waddr(predict_if[bht_addr_len-1:0]),
+        .predict_taken(bht_if)
+    );
 
     //Module connections
     // ---------------------------------------------
@@ -117,7 +224,15 @@ module RV32ICore(
         .jal(jal),
         .jalr(jalr_EX),
         .br(br),
-        .NPC(NPC)
+        .NPC(NPC),
+        // lab4
+        .btb_if(btb_if),
+        .btb_ex(btb_ex),
+        .if_predict_true(if_predict_true),
+        .predict_if(predict_if),
+        .PC_EX(PC_EX),
+        .bht_if(bht_if),
+        .bht_ex(bht_ex)
     );
 
 
@@ -456,7 +571,12 @@ module RV32ICore(
         .op1_sel(op1_sel),
         .op2_sel(op2_sel),
         .reg2_sel(reg2_sel),
-        .miss(miss)
+        .miss(miss),
+        // lab4
+        .btb_ex(btb_ex),
+        .btb_operation(btb_operation)
+        .bht_ex(bht_ex),
+        .if_predict_true(if_predict_true)
     );  
     	         
 endmodule

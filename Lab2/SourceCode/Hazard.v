@@ -47,7 +47,7 @@
 // 实验要求
     // 补全模块
 
-
+`include "Parameters.v"
 module HarzardUnit(
     input wire rst,
     input wire [4:0] reg1_srcD, reg2_srcD, reg1_srcE, reg2_srcE, reg_dstE, reg_dstM, reg_dstW,
@@ -58,10 +58,14 @@ module HarzardUnit(
     input wire reg_write_en_WB,
     input wire alu_src1,
     input wire [1:0] alu_src2,
-    //lab3 Cache miss
+    // lab3 Cache miss
     input wire miss,
     output reg flushF, bubbleF, flushD, bubbleD, flushE, bubbleE, flushM, bubbleM, flushW, bubbleW,
-    output reg [1:0] op1_sel, op2_sel, reg2_sel
+    output reg [1:0] op1_sel, op2_sel, reg2_sel,
+    // lab4
+    input wire [1:0] btb_operation,
+    input wire btb_ex,
+    input wire bht_ex, if_predict_true
     );
 
     // TODO: Complete this module
@@ -72,8 +76,19 @@ module HarzardUnit(
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b0101010101;
         else if(miss) //lab3 Cache
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b1010101010;
-        else if(br | jalr)
+        else if(jalr)
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b0001010000;
+        // lab4
+        else if(br)
+        begin
+            if(if_predict_true)
+                {bubbleF,flushF,bubbleD,flushD,bubbleE,flushE,bubbleM,flushM,bubbleW,flushW} <= 10'b0000000000;
+            else // wrong prediction
+                {bubbleF,flushF,bubbleD,flushD,bubbleE,flushE,bubbleM,flushM,bubbleW,flushW} <= 10'b0001010000;
+        end
+        else if(~br && btb_ex && bht_ex) // wrong prediction
+            {bubbleF,flushF,bubbleD,flushD,bubbleE,flushE,bubbleM,flushM,bubbleW,flushW} <= 10'b0001010000;
+        // end
         else if(wb_select==1'b1 & reg_dstE != 5'b0 & ((reg_dstE==reg1_srcD)||(reg_dstE==reg2_srcD)))
             {bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW} <= 10'b1010010000;
         else if(jal)

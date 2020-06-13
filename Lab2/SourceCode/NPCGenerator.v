@@ -30,18 +30,36 @@
 module NPC_Generator(
     input wire [31:0] PC, jal_target, jalr_target, br_target,
     input wire jal, jalr, br,
-    output reg [31:0] NPC
+    output reg [31:0] NPC,
+    // lab4
+    input wire btb_if, btb_ex, if_predict_true,
+    input wire [31:0] predict_if, PC_EX,
+    input wire bht_if,bht_ex
     );
     always@(*)
     begin
         if(jalr)
             NPC <= jalr_target;
         else if(br)
-            NPC <= br_target;
+        begin
+            if(if_predict_true)
+                NPC <= PC;
+            else
+                NPC <= br_target;
+        end
+        else if(~br && btb_ex && bht_ex)
+        begin
+            NPC <= PC_EX;
+        end
         else if(jal)
             NPC <= jal_target;
         else
-            NPC <= PC;
+        begin
+            if(btb_if && bht_if)
+                NPC <= predict_if;
+            else
+                NPC <= PC;
+        end
     end
     // TODO: Complete this module
 

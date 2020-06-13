@@ -73,5 +73,10 @@
     //CSR Params
     `define CSR_NUM         32
     `define CSR_ADDR        5
+// BTB
+    `define BTB_UPDATE      2'b01
+    `define BTB_ADD         2'b10
+    `define BTB_REMOVE      2'b11
+    `define BTB_NONE        2'b00
 `endif
 
