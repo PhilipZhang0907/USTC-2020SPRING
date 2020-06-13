@@ -1,25 +1,6 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/05/20 23:05:26
-// Design Name: 
-// Module Name: btb
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+`include "Parameters.v"
 
-`include "Parameters.v" 
 module branch_target_buffer
 # (
     parameter BUFFER_ADDR_LEN = 7
@@ -62,31 +43,34 @@ module branch_target_buffer
     
     integer i;
     always @ (posedge clk or posedge rst) 
-    begin //(update BTB)
+    begin
         if(rst) 
         begin
-            for(i=0; i<BUFFER_SIZE; i= i+1) 
+            for(i = 0; i < BUFFER_SIZE; i = i+1) 
             begin
-                    btb_tags[i]=0;
-                    valid[i]=0;
-                    predicted_pc[i]=0;
+                    btb_tags[i] = 0;
+                    valid[i] = 0;
+                    predicted_pc[i] = 0;
                     hit = 0;
                     rd_data = 0;
             end
         end
         else
             case(operation_type)
-            `BTB_UPDATE:  begin   //need to update branch target 
+            `BTB_UPDATE:  
+                begin   //update branch target 
                     predicted_pc[write_btb_addr] = wr_data;
-                    end
-            `BTB_ADD:  begin   //need to add entry
+                end
+            `BTB_ADD:
+                begin   //add entry
                     predicted_pc[write_btb_addr] = wr_data;
                     btb_tags[write_btb_addr] = write_tag_addr;
                     valid[write_btb_addr] = 1'b1;
-                    end
-            `BTB_REMOVE:  begin   //need to remove entry(invalidate entry)
+                end
+            `BTB_REMOVE:
+                begin   //remove entry(invalidate entry)
                     valid[write_btb_addr] = 1'b0;
-                    end   
+                end   
             //2'b00 do nothing
             endcase
     end

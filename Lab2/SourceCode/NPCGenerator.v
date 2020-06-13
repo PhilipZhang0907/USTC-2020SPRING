@@ -32,25 +32,18 @@ module NPC_Generator(
     input wire [31:0] PC, jal_target, jalr_target, br_target,
     input wire jal, jalr, br,
     output reg [31:0] NPC,
-    //altered for lab4
+    //Lab4
     input wire btb_if,btb_ex,if_prediction_true,
     input wire [31:0]prediction_if,PC_EX,
-    //lab4 phase2
     input wire bht_if,bht_ex
     );
 
-    // TODO: Complete this module
-    //assign NPC = (jal==1 ? jal_target : (jalr==1 ? jalr_target : (br==1 ? br_target : PC+2)));
-    // PC is connected to PC_4
-    //assign NPC <= (jal==1 ? jal_target : (jalr==1 ? jalr_target : (br==1 ? br_target: PC+4));
-    //always@(negedge clk)
-        //NPC = (jal==1 ? jal_target : (jalr==1 ? jalr_target : (br==1 ? br_target : PC+4)));
     always @(*)
     begin
         if(jalr)
             NPC <= jalr_target;
         else if(br)
-        //altered for lab 4 
+        //Lab 4 
             begin
                 if(if_prediction_true)
                     NPC <= PC;
@@ -64,7 +57,7 @@ module NPC_Generator(
         else if(jal)
             NPC <= jal_target;
         else
-        //altered for lab 4 
+        //Lab 4 
             begin
             if(btb_if && bht_if)
                 NPC <= prediction_if;
