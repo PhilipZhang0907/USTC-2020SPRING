@@ -65,7 +65,7 @@ module HarzardUnit(
     // lab4
     input wire [1:0] btb_operation,
     input wire btb_ex,
-    input wire bht_ex, if_predict_true
+    input wire bht_ex, if_prediction_true
     );
 
     // TODO: Complete this module
@@ -81,7 +81,7 @@ module HarzardUnit(
         // lab4
         else if(br)
         begin
-            if(if_predict_true)
+            if(if_prediction_true)
                 {bubbleF,flushF,bubbleD,flushD,bubbleE,flushE,bubbleM,flushM,bubbleW,flushW} <= 10'b0000000000;
             else // wrong prediction
                 {bubbleF,flushF,bubbleD,flushD,bubbleE,flushE,bubbleM,flushM,bubbleW,flushW} <= 10'b0001010000;

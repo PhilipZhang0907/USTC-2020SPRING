@@ -11,10 +11,10 @@
 
 
 //功能说明
-    // RV32I Core的顶层模块
+    // RV32I Core的顶层模�???
 //实验要求  
-    // 添加CSR指令的数据通路和相应部件
-
+    // 添加CSR指令的数据�?�路和相应部�???
+`include "Parameters.v" 
 module RV32ICore(
     input wire CPU_CLK,
     input wire CPU_RST,
@@ -26,10 +26,13 @@ module RV32ICore(
     input wire [31:0] CPU_Debug_InstCache_WD2,
     input wire [ 3:0] CPU_Debug_InstCache_WE2,
     output wire [31:0] CPU_Debug_InstCache_RD2,
-    // Lab3 Cache
+    //changed for lab3
     output wire debug_miss,
     output wire debug_cache_hit,
-    output wire [31:0]total_count
+    output wire [31:0]total_count,
+    //changed for lab4
+    reg [31:0] br_count,
+    reg [31:0] prediction_wrong_count
     );
 	//wire values definitions
     wire bubbleF, flushF, bubbleD, flushD, bubbleE, flushE, bubbleM, flushM, bubbleW, flushW;
@@ -64,18 +67,128 @@ module RV32ICore(
     wire [31:0] result, result_MEM;
     wire [1:0] op1_sel, op2_sel, reg2_sel;
 
-    // CSR data path
+    
+    //TODO: CSR debug
     wire [11:0] csr_addr_EX;
-    wire [2:0] csr_func3_out;
+    wire [2:0] csr_funct3_out;
     wire [4:0] csr_zimm_out;
     wire csr_write_en_in,csr_write_en_out;
-
-    assign csr_write_en_in = (inst_ID[6:0] == `CSR ? (inst_ID[19:15] == 5'b0 ? 1'b0 :1'b1) : 1'b0);
-    wire   is_csr_in,is_csr_out;
+    assign csr_write_en_in = inst_ID[6:0] == `CSR ? (inst_ID[19:15] == 5'b0 ? 1'b0 :1'b1) : 1'b0; //rs1=x0 时不写csr
+    wire is_csr_in,is_csr_out;
     assign is_csr_in = inst_ID[6:0] == `CSR ? 1'b1 : 1'b0;
-    wire   [31:0]csr_read_data;
+    wire [31:0] csr_read_data;
 
 
+    //altered for lab4
+    wire btb_if,btb_id,btb_ex;
+    wire [31:0]prediction_if,prediction_id,prediction_ex;
+    wire if_prediction_true;
+    wire [1:0]btb_operation;
+    
+    //assign if_prediction_true = (prediction_ex == br_target)?1'b1:1'b0;
+    
+    
+    btb_id_seg my_btb_id_seg(
+     .clk(CPU_CLK),
+     .bubbleD(bubbleD),
+     .flushD(flushD),
+     .btb_if(btb_if),
+     .btb_id(btb_id),
+     .prediction_if(prediction_if),
+     .prediction_id(prediction_id)
+    );
+    
+    btb_ex_seg my_btb_ex_seg(
+     .clk(CPU_CLK),
+     .bubbleE(bubbleE),
+     .flushE(flushE),
+     .btb_ex(btb_ex),
+     .btb_id(btb_id),
+     .prediction_id(prediction_id),
+     .prediction_ex(prediction_ex)
+    );
+    
+    branch_target_buffer 
+    #(
+    .BUFFER_ADDR_LEN(7)
+    )
+    my_btb
+    (
+    .clk(CPU_CLK), 
+    .rst(CPU_RST),
+    .hit(btb_if),         
+    .raddr(PC_IF+4),        //���ﲻ��PC_IF ���ǵ�PC�ļĴ�����΢��Ļ������һ�� //������NPC��ͷPCEXû��4��
+    .rd_data(prediction_if),  //Predicted target     
+    .operation_type(btb_operation),          //btb operation
+    .waddr(PC_EX),        //PCE(Update addr)
+    .wr_data(br_target)       //BrcPC
+    );
+    
+    wire bht_if,bht_id,bht_ex;
+    wire [31:0] final_prediction_if,final_prediction_id,final_prediction_ex;
+    assign final_prediction_if = bht_if ? (btb_if ? prediction_if : PC_IF+8) : ( PC_IF+8); //problem?
+    assign if_prediction_true = (final_prediction_ex == br_target)?1'b1:1'b0;
+    assign btb_operation = br ? (btb_ex ? (if_prediction_true ? `BTB_NONE : `BTB_UPDATE) : `BTB_ADD) : (btb_ex ?( bht_ex? `BTB_NONE:`BTB_REMOVE) : `BTB_NONE);
+//    assign btb_operation = br ? (btb_ex ? (if_prediction_true ? `BTB_NONE : `BTB_UPDATE) : `BTB_ADD) : (btb_ex ?( bht_ex? `BTB_REMOVE:`BTB_REMOVE) : `BTB_NONE);
+    
+    //Count for lab4 
+    initial
+    begin
+    br_count = 0;
+    prediction_wrong_count = 0;
+    end
+    always@(posedge CPU_CLK or posedge CPU_RST)
+    begin
+    if(CPU_RST)
+        begin
+        br_count = 0;
+        prediction_wrong_count = 0;
+        end
+    else
+        begin
+        if(inst_ID[6:0] == `BRANCH)
+            begin
+            br_count = br_count + 1;
+            end
+//        if((if_prediction_true && br_type_EX != `NOBRANCH) || (br_type_EX != `NOBRANCH && br == 0 && ~(btb_ex && bht_ex))
+        if(!if_prediction_true && br || ~br && (btb_ex && bht_ex))
+            begin
+            prediction_wrong_count = prediction_wrong_count + 1;
+            end
+        end
+    end
+    
+    localparam  bht_addr_len = 7;
+    bht #(
+     .BHT_ADDR_LEN(bht_addr_len)
+    ) my_bht
+    (
+    .clk(CPU_CLK), 
+    .rst(CPU_RST),
+    .br_ex(br),        
+    .raddr(prediction_if[bht_addr_len-1:0]),     
+    .waddr(prediction_ex[bht_addr_len-1:0]),  
+    .prediction_taken(bht_if)      
+    );
+    bht_ex_seg my_hbt_ex_seg(
+      .clk(CPU_CLK),
+     .bubbleE(bubbleE),
+     .flushE(flushE),
+     .bht_id(bht_id),
+      .final_prediction_id(final_prediction_id),
+      .bht_ex(bht_ex),
+      .final_prediction_ex(final_prediction_ex)
+    );
+    bht_id_seg my_hbt_id_seg(
+      .clk(CPU_CLK),
+     .bubbleD(bubbleD),
+     .flushD(flushD),
+     .bht_id(bht_id),
+      .final_prediction_id(final_prediction_id),
+      .bht_if(bht_if),
+      .final_prediction_if(final_prediction_if)
+    );
+    
     // Adder to compute PC + 4
     assign PC_4 = PC_IF + 4;
     // MUX for op2 source
@@ -90,7 +203,7 @@ module RV32ICore(
     // MUX for ALU op2
     assign ALU_op2 = (op2_sel == 2'h0) ? result_MEM :
                                          ((op2_sel == 2'h1) ? data_WB :
-                                                              ((op2_sel == 2'h2) ? {27'h0, reg2_src_EX} :
+                                                              ((op2_sel == 2'h2) ? reg2_src_EX :
                                                                                    reg_or_imm));
 
     // MUX for Reg2
@@ -98,117 +211,12 @@ module RV32ICore(
                                             ((reg2_sel == 2'h1) ? data_WB : reg2_EX);
 
 
-    // MUX for result (ALU or PC_EX)
+    // // MUX for result (ALU or PC_EX)
+    // assign result = load_npc_EX ? PC_EX : ALU_out;
+    // MUX for result (ALU or PC_EX)  
+    //TODO: CSR debug
     assign result = load_npc_EX ? PC_EX : (is_csr_out ? csr_read_data : ALU_out);
 
-    // For Lab4 BTB
-    wire btb_if, btb_id, btb_ex;
-    wire [31:0] predict_if, predict_id, predict_ex;
-    wire if_predict_true;
-    wire [1:0] btb_operation;
-
-    // For Lab4 BHT
-    wire bht_if, bht_id, bht_ex;
-    wire [31:0] final_predict_if, final_predict_id, final_predict_ex;
-
-    assign final_predict_if = bht_if ? (btb_if ? predict_if : PC_IF + 8) : ( PC_IF + 8 );
-    assign if_predict_true = (final_predict_ex == br_target) ? 1'b1 : 1'b0;
-    assign btb_operation = br ? (btb_ex ? (if_predict_true ? `BTB_NONE : `BTB_UPDATE) : `BTB_ADD) : (btb_ex ? ( bht_ex ?  `BTB_NONE : `BTB_REMOVE) : `BTB_NONE);
-
-    // For lab4 test
-    initial
-    begin
-        br_count = 0;
-        predict_wrong = 0;
-    end
-    always@(posedge CPU_CLK or posedge CPU_RST)
-    begin
-        if(CPU_RST)
-        begin
-            br_count = 0;
-            predict_wrong = 0;
-        end
-        else
-        begin
-            if(inst_ID[6:0] == `BRANCH)
-            begin
-                br_count = br_count + 1;
-            end
-            if(!if_predict_true && br || ~br && (btb_ex && bht_ex))
-            begin
-                predict_wrong = predict_wrong + 1;
-            end
-        end
-    end
-
-    // lab4 module
-    BTB_ID_SEG new_BTB_ID_SEG(
-        .clk(CPU_CLK),
-        .bubbleD(bubbleD),
-        .flushD(flushD),
-        .btb_if(btb_if),
-        .predict_if(predict_if),
-        .btb_id(btb_id),
-        .predict_id(predict_id)
-    );
-
-    BTB_EX_SEG new_BTB_ID_SEG(
-        .clk(CPU_CLK),
-        .bubbleE(bubbleE),
-        .flushE(flushE),
-        .btb_id(btb_id),
-        .predict_id(predict_id),
-        .btb_ex(btb_ex),
-        .predict_ex(predict_ex)
-    );
-
-    BHT_ID_SEG new_BHT_ID_SEG(
-        .clk(CPU_CLK),
-        .bubbleD(bubbleD),
-        .flushD(flushD),
-        .bht_if(bht_if),
-        .final_predict_if(final_predict_if),
-        .bht_id(bht_id),
-        .final_predict_id(final_predict_id)
-    );
-
-    BHT_EX_SEG new_BHT_EX_SEG(
-        .clk(CPU_CLK),
-        .bubbleE(bubbleE),
-        .flushE(flushE),
-        .bht_id(bht_id),
-        .final_predict_id(final_predict_id),
-        .bht_ex(bht_ex),
-        .final_predict_ex(final_predict_ex)
-    );
-
-    Branch_Target_Buffer#(
-        .BUFFER_ADDR_LEN(7)
-    )
-    my_btb
-    (
-        .clk(CPU_CLK), 
-        .rst(CPU_RST),
-        .hit(btb_if),         
-        .raddr(PC_IF+4),
-        .rd_data(predict_if),    
-        .opr(btb_operation),
-        .waddr(PC_EX),
-        .wr_data(br_target)
-    );
-
-    Branch_History_Table#(
-        .BHT_ADDR_LEN(7)
-    )
-    my_bht
-    (
-        .clk(CPU_CLK), 
-        .rst(CPU_RST),
-        .br_ex(br),
-        .raddr(predict_if[bht_addr_len-1:0]),
-        .waddr(predict_ex[bht_addr_len-1:0]),
-        .predict_taken(bht_if)
-    );
 
     //Module connections
     // ---------------------------------------------
@@ -225,14 +233,18 @@ module RV32ICore(
         .jalr(jalr_EX),
         .br(br),
         .NPC(NPC),
-        // lab4
+        //Altered for lab4
         .btb_if(btb_if),
         .btb_ex(btb_ex),
-        .if_predict_true(if_predict_true),
-        .predict_if(predict_if),
+        .if_prediction_true(if_prediction_true),
+        .prediction_if(prediction_if),
         .PC_EX(PC_EX),
+        //lab4 phase 2
         .bht_if(bht_if),
         .bht_ex(bht_ex)
+        //input wire btb_if,btb_ex,if_prediction_true,
+    //input wire [31:0]prediction_if
+        //.clk(CPU_CLK)
     );
 
 
@@ -290,7 +302,7 @@ module RV32ICore(
         .reg2(reg2)
     );
 
-
+    wire [6:0] opcode_ID;
     ControllerDecoder ControllerDecoder1(
         .inst(inst_ID),
         .jal(jal),
@@ -306,7 +318,7 @@ module RV32ICore(
         .cache_write_en(cache_write_en_ID),
         .alu_src1(alu_src1_ID),
         .alu_src2(alu_src2_ID),
-        .imm_type(imm_type)
+        .imm_type(imm_type),
     );
 
     ImmExtend ImmExtend1(
@@ -369,7 +381,7 @@ module RV32ICore(
     );
 
 
-
+    wire [6:0] opcode_EX;
     Ctrl_EX Ctrl_EX1(
         .clk(CPU_CLK),
         .bubbleE(bubbleE),
@@ -398,14 +410,15 @@ module RV32ICore(
         .alu_src2_EX(alu_src2_EX)
     );
 
-    CSRAddrEx CSRAddrEx1(
+    //TODO: CSR debug
+    CsrAddrEx CsrAddrEx1(
         .clk(CPU_CLK),
         .bubbleE(bubbleE),
         .flushE(flushE),
         .csr_addr_in(inst_ID[31:20]),
         .csr_addr_out(csr_addr_EX),
-        .func3_in(inst_ID[14:12]),
-        .func3_out(csr_func3_out),
+        .funct3_in(inst_ID[14:12]),
+        .funct3_out(csr_funct3_out),
         .zimm_in(inst_ID[19:15]),
         .zimm_out(csr_zimm_out),
         .csr_write_en_in(csr_write_en_in),
@@ -418,12 +431,13 @@ module RV32ICore(
     // EX stage
     // ---------------------------------------------
 
+    //TODO: CSR debug
     ControlAndStatusRegister csr(
         .clk(CPU_CLK),
         .rst(CPU_RST),
         .reg1(reg1_EX),
         .zimm(csr_zimm_out),
-        .func3(csr_func3_out),
+        .funct3(csr_funct3_out),
         .read_reg_addr(csr_addr_EX),
         .csr_write_en(csr_write_en_out),
         .read_reg_data(csr_read_data),
@@ -492,7 +506,6 @@ module RV32ICore(
     // ---------------------------------------------
     wire miss;
     assign debug_miss = miss;
-
     WB_Data_WB WB_Data_WB1(
         .clk(CPU_CLK),
         .bubbleW(bubbleW),
@@ -507,6 +520,7 @@ module RV32ICore(
         .debug_in_data(CPU_Debug_DataCache_WD2),
         .debug_out_data(CPU_Debug_DataCache_RD2),
         .data_WB(data_WB),
+        //changed for lab3
         .miss(miss),
         .rst(CPU_RST),
         .debug_cache_hit(debug_cache_hit),
@@ -571,12 +585,14 @@ module RV32ICore(
         .op1_sel(op1_sel),
         .op2_sel(op2_sel),
         .reg2_sel(reg2_sel),
+        //changed for lab3
         .miss(miss),
-        // lab4
+        //altered for lab4
         .btb_ex(btb_ex),
-        .btb_operation(btb_operation)
+        .btb_operation(btb_operation),
+        //lab4 phase 2
         .bht_ex(bht_ex),
-        .if_predict_true(if_predict_true)
+        .if_prediction_true(if_prediction_true)
     );  
     	         
 endmodule
