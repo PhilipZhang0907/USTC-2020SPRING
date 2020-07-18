@@ -1,0 +1,38 @@
+<!doctype html>
+<title>Tables</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<section class="content">
+  <header>
+    <h1 style="text-align:center;">All records in Table - {{ tablename }}</h1>
+  </header>
+
+  <table>
+    <thead>
+        <tr>
+            <th style="width: 25%"> loanID </th>
+            <th style="width: 25%"> cusID  </th>
+            <th style="width: 25%"> money  </th>
+            <th style="width: 25%"> state  </th>
+        </tr>
+    </thead>
+    <tbody>
+		{% for row in rows %}
+		<tr>
+			<td style="width: 25%"> {{ row[0]  }}</td>
+            <td style="width: 25%"> {{ row[1]  }}</td>
+            <td style="width: 25%"> {{ row[2]  }}</td>
+            <td style="width: 25%"> {{ row[3]  }}</td>
+		<tr>
+		{% endfor %}
+	</tbody>
+  </table>
+
+  <form method="post" id="table"> 
+    <div>
+      <input id = "clearBtn" type="submit" name = "back" value="Back to Menu"> 
+    </div>
+    
+  </form>
+</section>

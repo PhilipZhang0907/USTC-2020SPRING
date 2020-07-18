@@ -1,0 +1,22 @@
+<!doctype html>
+<title>Menu</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<section class="content">
+  <header>
+    <h1 style="text-align:center;">Choose Service</h1>
+  </header>
+
+  <form method="post">
+    <input type="submit" name="Customer Management" value="Customer Management">
+    <input type="submit" name="Account Management" value="Account Management">
+    <input type="submit" name="Loan Management" value="Loan Management">
+    <input type="submit" name="Business Summary" value="Business Summary">
+  </form>
+  
+</section>
+
+<style type='text/css'>
+  input {color: blue}
+</style>

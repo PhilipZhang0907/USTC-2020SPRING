@@ -1,0 +1,40 @@
+<!doctype html>
+<title>Update Customer</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<section class="content">
+  <header>
+    <h1 style="text-align:center;">Please input valid cusID</h1>
+  </header>
+
+  <form method="post">
+    <label for="cusID">cusID</label>
+        <input type="cusID" name="cusID" id="cusID" required>
+    
+    <label for="cusname">cusname</label>
+        <input type="cusname" name="cusname" id="cusname" required>
+    
+    <label for="cusphone">cusphone</label>
+        <input name="cusphone" id="cusphone" required>
+
+    <label for="address">address</label>
+        <input name="address" id="address" required>
+      
+    <label for="contact_phone">contact_phone</label>
+        <input name="contact_phone" id="contact_phone" required>
+
+    <label for="contact_name">contact_name</label>
+        <input name="contact_name" id="contact_name" required>
+
+    <label for="contact_Email">contact_Email</label>
+        <input name="contact_Email" id="contact_Email" required>
+
+    <label for="relation">relation</label>
+        <input name="relation" id="relation" required>
+
+    <input type="submit" value="Update">
+
+  </form>
+  
+</section>

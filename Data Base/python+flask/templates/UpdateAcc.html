@@ -1,0 +1,28 @@
+<!doctype html>
+<title>Update Account</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<section class="content">
+  <header>
+    <h1 style="text-align:center;">Please input valid accID</h1>
+  </header>
+
+  <form method="post">
+    <label for="accID">accID</label>
+        <input type="accID" name="accID" id="accID" required>
+    
+    <label for="money">money</label>
+        <input type="money" name="money" id="money" required>
+    
+    <label for="interest">interest</label>
+        <input name="interest" id="interest" required>
+
+    <label for="overdraft">overdraft</label>
+        <input name="overdraft" id="overdraft" required>
+
+    <input type="submit" value="Update">
+
+  </form>
+  
+</section>
